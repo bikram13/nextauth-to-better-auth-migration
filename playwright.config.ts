@@ -2,7 +2,11 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
-  timeout: 30_000,
+  timeout: 60_000, // CI cold-compile + first-run JIT is slow; bumped from 30s
+  expect: {
+    timeout: 20_000, // Next.js dev mode compiles routes on first hit (3-4s);
+                     // toHaveURL default 5s is too tight for the first sign-up POST
+  },
   fullyParallel: false, // tests share the DB, run serially
   workers: 1,
   reporter: [["list"]],
@@ -10,6 +14,8 @@ export default defineConfig({
     baseURL: "http://localhost:3100",
     trace: "off",
     screenshot: "only-on-failure",
+    actionTimeout: 15_000,
+    navigationTimeout: 20_000,
   },
   webServer: {
     command: "pnpm exec next dev --port 3100",
