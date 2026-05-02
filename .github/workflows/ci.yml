@@ -71,7 +71,7 @@ jobs:
           exit 1
 
       - name: Push schema
-        run: pnpm exec drizzle-kit push
+        run: pnpm exec drizzle-kit push --force
 
       - name: Seed legacy data
         run: pnpm db:seed
