@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# Tooling caches
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Env (only the example is committed)
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp

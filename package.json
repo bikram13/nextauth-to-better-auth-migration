@@ -1,0 +1,50 @@
+{
+  "name": "better-auth-migration-reference",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reference repo for the Auth.js to Better Auth Migration Playbook ebook. Verifies every code block in the book runs end-to-end.",
+  "scripts": {
+    "dev": "next dev --port 3100",
+    "build": "next build",
+    "start": "next start --port 3100",
+    "typecheck": "tsc --noEmit",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:psql": "docker compose exec postgres psql -U auth_user -d auth_db",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:seed": "tsx scripts/seed-legacy.ts",
+    "db:migrate-better-auth": "tsx scripts/migrate-to-better-auth.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:install": "playwright install chromium",
+    "verify": "pnpm db:up && sleep 3 && pnpm db:push && pnpm db:seed && pnpm db:migrate-better-auth && pnpm typecheck && pnpm test:e2e"
+  },
+  "dependencies": {
+    "@auth/drizzle-adapter": "^1.7.0",
+    "bcryptjs": "^2.4.3",
+    "better-auth": "^1.0.0",
+    "drizzle-orm": "^0.45.2",
+    "hi-base32": "^0.5.1",
+    "next": "^15.0.0",
+    "next-auth": "5.0.0-beta.25",
+    "postgres": "^3.4.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "dotenv": "^16.4.5",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
