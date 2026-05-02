@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: typecheck + Playwright
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: auth_user
+          POSTGRES_PASSWORD: auth_pass
+          POSTGRES_DB: auth_db
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U auth_user -d auth_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://auth_user:auth_pass@localhost:5433/auth_db
+      AUTH_SECRET: ci_insecure_secret_at_least_32_chars_long_for_tests
+      BETTER_AUTH_SECRET: ci_different_insecure_secret_32_chars_long_for_tests
+      BETTER_AUTH_URL: http://localhost:3100
+      APP_URL: http://localhost:3100
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+      AUTH_GOOGLE_ID: mock-google-client-id
+      AUTH_GOOGLE_SECRET: mock-google-client-secret
+      AUTH_GITHUB_ID: mock-github-client-id
+      AUTH_GITHUB_SECRET: mock-github-client-secret
+      GOOGLE_CLIENT_ID: mock-google-client-id
+      GOOGLE_CLIENT_SECRET: mock-google-client-secret
+      GITHUB_CLIENT_ID: mock-github-client-id
+      GITHUB_CLIENT_SECRET: mock-github-client-secret
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5433 -U auth_user; then
+              echo "Postgres is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Postgres did not become ready in time"
+          exit 1
+
+      - name: Push schema
+        run: pnpm exec drizzle-kit push
+
+      - name: Seed legacy data
+        run: pnpm db:seed
+
+      - name: Run migration
+        run: pnpm db:migrate-better-auth
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Install Playwright Chromium
+        run: pnpm test:install
+
+      - name: Run Playwright tests
+        run: pnpm exec playwright test
